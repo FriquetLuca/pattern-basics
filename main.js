@@ -237,7 +237,7 @@ const symbolsBasicPattern = new BasicPattern({
     }
 });
 const whitespacesBasicPattern = new BasicPattern({
-    name: 'WhiteSpace',
+    name: 'Whitespace',
     defaultValue: '',
     isPattern: (i, c, txt) => { return whitespaces.includes(c); },
     fetch: (index, c, txt) => {
