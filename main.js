@@ -108,6 +108,8 @@ class Txt
    }
 }
 
+
+const logs = [];
 /**
  * A function made to look for specific pattern
  * @param {string} txtContent The string we're currently parsing.
@@ -275,7 +277,47 @@ const blockNestedPatterns = new BasicPattern({
         }
         else // Something went wrong with brackets (user input) since it was never closed.
         {
-            throw new Error(`Curly brackets starting at line ${result.lastIndex} is never closed.`);
+            const lineData = (content, maxIndex) => {
+                maxIndex++;
+                let line = 1;
+                let lastBeginLineChar = -1;
+                for(let i = 0; i < maxIndex; i++)
+                {
+                    if(content[i] === '\n')
+                    {
+                        lastBeginLineChar = i;
+                        line++;
+                    }
+                }
+                return {
+                    line: line,
+                    character: maxIndex - lastBeginLineChar - 1
+                };
+            }
+            let getLineData = lineData(txt, index);
+            let charPosDenom = getLineData.character % 10;
+            let denom = 'th';
+            switch(charPosDenom)
+            {
+                case 1:
+                    denom = 'st';
+                    break;
+                case 2:
+                    denom = 'nd';
+                    break;
+                case 3:
+                    denom = 'rd';
+                    break;
+            }
+            let errorMsg = `<strong><em>Curly brackets</em></strong> at line ${getLineData.line}, the <strong>${getLineData.character}${denom}</strong> character: the <em>curly brackets</em> is never closed.`;
+            if(!logs.includes(errorMsg))
+            {
+                logs.push(errorMsg);
+            }
+            return {
+                content: '',
+                lastIndex: index
+            };
         }
     }
 });
@@ -305,18 +347,38 @@ const separateNodes = (nodes, depth = 0) => {
     {
         if(typeof node[1] === 'object') // This node is a sub element (an array if nothing goes wrong)
         {
-            toShow = `${toShow}${generateRepeat(depth, '\t')}<em>${node[0]}</em>:\n${separateNodes(node[1], depth + 1)}`;
+            toShow = `${toShow}${generateRepeat(depth, '\t')}<em class='object'>${node[0]}</em>:\n${separateNodes(node[1], depth + 1)}`;
         }
         else // It's a string, ez pz let's write it with some spacing
         {
-            toShow = `${toShow}${generateRepeat(depth, '\t')}<em>${node[0]}</em>:\n${generateRepeat(depth + 1, '\t')}<strong>${node[1]}</strong>\n`;
+            toShow = `${toShow}${generateRepeat(depth, '\t')}<em class='object'>${node[0]}</em>:\n${generateRepeat(depth + 1, '\t')}<strong>${node[1]}</strong>\n`;
         }
     }
     return toShow;
 };
 
-// Let's show what we got in the end!
-let input = prompt('Input');
-let subdivided = LookForPattern(input, AllBasicPatterns); 
-let txt = document.querySelector('.md_result');
-txt.innerHTML = `<pre>${separateNodes(subdivided.result)}</pre>`;
+
+function fastInput()
+{
+    let userInput = document.getElementById('userInput').value;
+    let output = document.querySelector('.userOutput');
+    let userLog = document.querySelector('.errorOutput');
+    let subdivided = LookForPattern(userInput, AllBasicPatterns);
+    let packLogs = '';
+    for(let log of logs)
+    {
+        packLogs = `${packLogs}${log}\n`;
+    }
+    for(let i = logs.length; i > 0; i--)
+    {
+        logs.pop();
+    }
+    userLog.innerHTML = `<pre>${packLogs}</pre>`;
+    output.innerHTML = `<pre>${separateNodes(subdivided.result)}</pre>`;
+}
+fastInput();
+
+let userInput = document.getElementById('userInput');
+userInput.addEventListener('keyup', (e) => {
+    fastInput();
+})
