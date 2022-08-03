@@ -22,9 +22,9 @@ A calculator that can parse written text to compute the value.
 - a!
     > The factorial of a.
 - a°
-    > Convert the angle a in degree to radian.
+    > Convert the angle in degree a to radian.
 - a rad
-    > Convert the angle a in radian to degree.
+    > Convert the angle in radian a to degree.
 
 ## Supported functions
 
