@@ -61,8 +61,8 @@ A calculator that can parse written text to compute the value.
 - ln(x)
     > Natural logarithm of x.
     - x: value
-- log(x, b)
-    > Logarithm of x in base b.
+- log(x), log(x, b)
+    > Logarithm of x in base b (base e by default if no base is given).
     - x: value
     - b: base
 - factorial(x)

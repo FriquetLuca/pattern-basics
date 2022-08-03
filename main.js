@@ -1,6 +1,3 @@
-/*
-*/
-
 function iLog(n, b)
 {
     let x = 0.0;
@@ -169,7 +166,6 @@ class Txt
 }
 
 
-const logs = [];
 /**
  * A function made to look for specific pattern
  * @param {string} txtContent The string we're currently parsing.
@@ -337,43 +333,6 @@ const blockNestedPatterns = new BasicPattern({
         }
         else // Something went wrong with brackets (user input) since it was never closed.
         {
-            const lineData = (content, maxIndex) => {
-                maxIndex++;
-                let line = 1;
-                let lastBeginLineChar = -1;
-                for(let i = 0; i < maxIndex; i++)
-                {
-                    if(content[i] === '\n')
-                    {
-                        lastBeginLineChar = i;
-                        line++;
-                    }
-                }
-                return {
-                    line: line,
-                    character: maxIndex - lastBeginLineChar - 1
-                };
-            }
-            let getLineData = lineData(txt, index);
-            let charPosDenom = getLineData.character % 10;
-            let denom = 'th';
-            switch(charPosDenom)
-            {
-                case 1:
-                    denom = 'st';
-                    break;
-                case 2:
-                    denom = 'nd';
-                    break;
-                case 3:
-                    denom = 'rd';
-                    break;
-            }
-            let errorMsg = `<strong><em>Curly brackets</em></strong> at line ${getLineData.line}, the <strong>${getLineData.character}${denom}</strong> character: the <em>curly brackets</em> is never closed.`;
-            if(!logs.includes(errorMsg))
-            {
-                logs.push(errorMsg);
-            }
             return {
                 content: '',
                 lastIndex: index
@@ -637,9 +596,16 @@ const preFunc = {
         }
     },
     'log': {
-        nbrArg: 2,
-        exec: (x, b) => {
-            return Math.log(b) / Math.log(x);
+        nbrArg: 1,
+        exec: (...x) => {
+            if(x.length == 1)
+            {
+                return Math.log(x[0]);
+            }
+            else
+            {
+                return Math.log(b[1]) / Math.log(x[0]);
+            }
         }
     },
     'factorial': {
@@ -909,19 +875,13 @@ function fastInput()
 {
     let userInput = document.getElementById('userInput').value;
     let output = document.querySelector('.userOutput');
-    let userLog = document.querySelector('.errorOutput');
-    let subdivided = LookForPattern(userInput, AllBasicPatterns);
-    let packLogs = '';
-    for(let log of logs)
+    let r = null;
+    let computingResult = computeResult(remakeNodes(LookForPattern(userInput, AllBasicPatterns).result));
+    if(computingResult.length > 0)
     {
-        packLogs = `${packLogs}${log}\n`;
+        r = computingResult[0].content;
     }
-    for(let i = logs.length; i > 0; i--)
-    {
-        logs.pop();
-    }
-    userLog.innerHTML = `<pre>${packLogs}</pre>`;
-    output.innerHTML = `<pre>${computeResult(remakeNodes(subdivided.result))[0].content}</pre>`;
+    output.innerHTML = `<pre>${typeof r === 'number' ? r : 'ERROR.'}</pre>`;
 }
 fastInput();
 
