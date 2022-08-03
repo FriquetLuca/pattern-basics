@@ -1,7 +1,67 @@
+/*
+*/
+
+function iLog(n, b)
+{
+    let x = 0.0;
+    while (n > 1.0)
+    {
+        x += 1.0;
+        n = Math.log(n) / Math.log(b);
+    }
+    return x;
+}
+function gamma(a)
+{
+    let s = 2.48574089138753565546e-5;
+    if (a < 0.5)
+    {
+        s += 1.05142378581721974210 / (1.0 - a);
+        s += -3.45687097222016235469 / (2.0 - a);
+        s += 4.51227709466894823700 / (3.0 - a);
+        s += -2.98285225323576655721 / (4.0 - a);
+        s += 1.05639711577126713077 / (5.0 - a);
+        s += -1.95428773191645869583e-1 / (6.0 - a);
+        s += 1.70970543404441224307e-2 / (7.0 - a);
+        s += -5.71926117404305781283e-4 / (8.0 - a);
+        s += 4.63399473359905636708e-6 / (9.0 - a);
+        s += -2.71994908488607703910e-9 / (10.0 - a);
+        return 3.14159265358979323846264338327950288419716939937510582 / (Math.sin(3.14159265358979323846264338327950288419716939937510582 * a) * s * 1.8603827342052657173362492472666631120594218414085755 * Math.pow((a - 10.400511) / 2.71828182845904523536028747135266249, 0.5 - a));
+    }
+    else
+    {
+        s += 1.05142378581721974210 / a;
+        s += -3.45687097222016235469 / (a + 1.0);
+        s += 4.51227709466894823700 / (a + 2.0);
+        s += -2.98285225323576655721 / (a + 3.0);
+        s += 1.05639711577126713077 / (a + 4.0);
+        s += -1.95428773191645869583e-1 / (a + 5.0);
+        s += 1.70970543404441224307e-2 / (a + 6.0);
+        s += -5.71926117404305781283e-4 / (a + 7.0);
+        s += 4.63399473359905636708e-6 / (a + 8.0);
+        s += -2.71994908488607703910e-9 / (a + 9.0);
+        return s * 1.8603827342052657173362492472666631120594218414085755 * Math.pow((a + 10.400511) / 2.71828182845904523536028747135266249, a - 0.5);
+    }
+}
+function lambertW(x)
+{
+    if (x < -Math.exp(-1))
+    {
+        throw new Error("The Lambert W function is not defined for " + x + ".");
+    }
+    let amountOfIterations = Math.max(4, Math.ceil(Math.log(x) / 3));
+    let w = 3 * Math.log(x + 1) / 4;
+    for (let i = 0; i < amountOfIterations; i++)
+    {
+        w -= (w * Math.exp(w) - x) / (Math.exp(w) * (w + 1) - (w + 2) * (w * Math.exp(w) - x) / (2 * w + 2));
+    }
+    return w;
+}
+
 const controls = [ '\n', '\t' ];
 const whitespaces = [' ', '\t' ];
-const symbols = [ '§', '@', '¥', '€', '¬', '&', '|', '#', '^', '*', '$', '%', '±', '=', '+', '-', '*', '/', '\\', '<', '>', '~', '°', '_', '`', '´', '¨', '(', ')', '[', ']', '{', '}' ];
-const punctuations = [ '.', ',', ';', ':', '?', '!', '"', '\'', '«', '»' ];
+const symbols = [ '§', '!', '@', '¥', '€', '¬', '&', '|', '#', '^', '*', '$', '%', '±', '=', '+', '-', '*', '/', '\\', '<', '>', '~', '°', '_', '`', '´', '¨', '(', ')', '[', ']', '{', '}' ];
+const punctuations = [ '.', ',', ';', ':', '?', '"', '\'', '«', '»' ];
 const letters = [   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
                     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
                     'á', 'à', 'ä', 'â',
@@ -151,7 +211,7 @@ function LookForPattern(txtContent, patternSet, i = 0, endPattern = (i, c, t) =>
 }
 
 /*
-    A BUNCH OF SHOWCASES OF BASIC PATTERN
+    PATTERNS
 */
 const numbersBasicPattern = new BasicPattern({
     name: 'Number',
@@ -322,47 +382,53 @@ const blockNestedPatterns = new BasicPattern({
     }
 });
 
-const AllBasicPatterns = [ // A list of all the showcases pattern, just to make things simpler
-    blockNestedPatterns,
-    numbersBasicPattern,
-    wordsBasicPattern,
-    punctuationsBasicPattern,
-    symbolsBasicPattern,
-    whitespacesBasicPattern,
-    controlsBasicPattern
-];
 
-// A string generator to see our node hierarchy
-const separateNodes = (nodes, depth = 0) => {
-    const generateRepeat = (n, r) => { // Generate a repeted amount of letter for spacing
-        let space = '';
-        for(let i = 0; i < n; i++)
-        {
-            space = `${space}${r}`;
-        }
-        return space;
-    };
-    let toShow = '';
-    for(let node of nodes) // Checking node by node
-    {
-        if(typeof node[1] === 'object') // This node is a sub element (an array if nothing goes wrong)
-        {
-            toShow = `${toShow}${generateRepeat(depth, '\t')}<em class='object'>${node[0]}</em>:\n${separateNodes(node[1], depth + 1)}`;
-        }
-        else // It's a string, ez pz let's write it with some spacing
-        {
-            toShow = `${toShow}${generateRepeat(depth, '\t')}<em class='object'>${node[0]}</em>:\n${generateRepeat(depth + 1, '\t')}<strong>${node[1]}</strong>\n`;
-        }
+/*
+    OPERATORS
+*/
+const operators = {
+    '+': {
+        name: '+',
+        priority: 3,
+        exec: (a, b) => { return a + b; }
+    },
+    '-': {
+        name: '-',
+        priority: 3,
+        exec: (a, b) => { return a - b; }
+    },
+    '*': {
+        name: '*',
+        priority: 2,
+        exec: (a, b) => { return a * b; }
+    },
+    '/': {
+        name: '/',
+        priority: 2,
+        exec: (a, b) => { return a / b; }
+    },
+    '%': {
+        name: '%',
+        priority: 2,
+        exec: (a, b) => { return a % b; }
+    },
+    '^': {
+        name: '^',
+        priority: 1,
+        exec: (a, b) => { return Math.pow(a, b); }
+    },
+    '!': {
+        name: '!',
+        priority: 0,
+        isRightApplied: true,
+        exec: (n) => { return gamma(n + 1); }
     }
-    return toShow;
 };
-const prioOpe = {
-    '+': 1,
-    '-': 1,
-    '*': 0,
-    '/': 0,
-    '%': 0
-}
+
+
+/*
+    FUNCTIONS
+*/
 const preFunc = {
     'cos': {
         nbrArg: 1,
@@ -456,6 +522,54 @@ const preFunc = {
             return Math.max(...a);
         }
     },
+    'avg': {
+        nbrArg: 2,
+        unlockLimit: true,
+        exec: (...a) => {
+            let r = 0;
+            for(let n of a)
+            {
+                r += n;
+            }
+            return r / a.length;
+        }
+    },
+    'avgAD': {
+        nbrArg: 2,
+        unlockLimit: true,
+        exec: (m, ...a) => {
+            let r = 0;
+            for(let n of a)
+            {
+                r += Math.abs(n - m);
+            }
+            return r / a.length;
+        }
+    },
+    'midway': {
+        nbrArg: 2,
+        unlockLimit: true,
+        exec: (...a) => {
+            let min = Math.min(...a);
+            let max = Math.max(...a);
+            for(let n of a)
+            {
+                min = Math.min(min, n);
+                max = Math.max(max, n);
+            }
+            return (max - min) / 2 + min;
+        }
+    },
+    'median': {
+        nbrArg: 2,
+        unlockLimit: true,
+        exec: (...a) => {
+            a.sort(function(a, b) {
+                return a - b;
+            });
+            return a.length % 2 == 1 ? a[(a.length + 1) / 2] : (a[a.length / 2] + a[(a.length /2) + 1]) / 2;
+        }
+    },
     'abs': {
         nbrArg: 1,
         exec: (e) => {
@@ -466,6 +580,12 @@ const preFunc = {
         nbrArg: 1,
         exec: (e) => {
             return Math.ceil(e);
+        }
+    },
+    'lerp': {
+        nbrArg: 3,
+        exec: (a, b, t) => {
+            return a + (b - a) * t;
         }
     },
     'floor': {
@@ -494,7 +614,7 @@ const preFunc = {
     },
     'root': {
         nbrArg: 2,
-        exec: (n, x) => {
+        exec: (x, n) => {
             return Math.pow(x, 1 / n);
         }
     },
@@ -518,8 +638,8 @@ const preFunc = {
     },
     'log': {
         nbrArg: 2,
-        exec: (b, x) => {
-            return Math.log(x) / Math.log(b);
+        exec: (x, b) => {
+            return Math.log(b) / Math.log(x);
         }
     },
     'factorial': {
@@ -542,7 +662,7 @@ const preFunc = {
     },
     'ilog': {
         nbrArg: 2,
-        exec: (b, x) => {
+        exec: (x, b) => {
             return iLog(x, b);
         }
     },
@@ -553,62 +673,21 @@ const preFunc = {
         }
     }
 };
-function iLog(n, b)
-{
-    let x = 0.0;
-    while (n > 1.0)
-    {
-        x += 1.0;
-        n = Math.log(n) / Math.log(b);
-    }
-    return x;
-}
-function gamma(a)
-{
-    let s = 2.48574089138753565546e-5;
-    if (a < 0.5)
-    {
-        s += 1.05142378581721974210 / (1.0 - a);
-        s += -3.45687097222016235469 / (2.0 - a);
-        s += 4.51227709466894823700 / (3.0 - a);
-        s += -2.98285225323576655721 / (4.0 - a);
-        s += 1.05639711577126713077 / (5.0 - a);
-        s += -1.95428773191645869583e-1 / (6.0 - a);
-        s += 1.70970543404441224307e-2 / (7.0 - a);
-        s += -5.71926117404305781283e-4 / (8.0 - a);
-        s += 4.63399473359905636708e-6 / (9.0 - a);
-        s += -2.71994908488607703910e-9 / (10.0 - a);
-        return 3.14159265358979323846264338327950288419716939937510582 / (Math.sin(3.14159265358979323846264338327950288419716939937510582 * a) * s * 1.8603827342052657173362492472666631120594218414085755 * Math.pow((a - 10.400511) / 2.71828182845904523536028747135266249, 0.5 - a));
-    }
-    else
-    {
-        s += 1.05142378581721974210 / a;
-        s += -3.45687097222016235469 / (a + 1.0);
-        s += 4.51227709466894823700 / (a + 2.0);
-        s += -2.98285225323576655721 / (a + 3.0);
-        s += 1.05639711577126713077 / (a + 4.0);
-        s += -1.95428773191645869583e-1 / (a + 5.0);
-        s += 1.70970543404441224307e-2 / (a + 6.0);
-        s += -5.71926117404305781283e-4 / (a + 7.0);
-        s += 4.63399473359905636708e-6 / (a + 8.0);
-        s += -2.71994908488607703910e-9 / (a + 9.0);
-        return s * 1.8603827342052657173362492472666631120594218414085755 * Math.pow((a + 10.400511) / 2.71828182845904523536028747135266249, a - 0.5);
-    }
-}
-function lambertW(x)
-{
-    if (x < -Math.exp(-1))
-    {
-        throw new Error("The Lambert W function is not defined for " + x + ".");
-    }
-    let amountOfIterations = Math.max(4, Math.ceil(Math.log(x) / 3));
-    let w = 3 * Math.log(x + 1) / 4;
-    for (let i = 0; i < amountOfIterations; i++)
-    {
-        w -= (w * Math.exp(w) - x) / (Math.exp(w) * (w + 1) - (w + 2) * (w * Math.exp(w) - x) / (2 * w + 2));
-    }
-    return w;
-}
+
+
+/*
+    A list of all the pattern, just to make things simpler
+*/
+const AllBasicPatterns = [
+    blockNestedPatterns,
+    numbersBasicPattern,
+    wordsBasicPattern,
+    punctuationsBasicPattern,
+    symbolsBasicPattern,
+    whitespacesBasicPattern,
+    controlsBasicPattern
+];
+
 const remakeNodes = (nodes) => {
     let result = [];
     for(let i = 0; i < nodes.length; i++)
@@ -651,10 +730,6 @@ const remakeNodes = (nodes) => {
                                 });*/
                             }
                         }
-                        else
-                        {
-                            // Discard..
-                        }
                     }
                     else
                     {
@@ -690,6 +765,16 @@ const remakeNodes = (nodes) => {
                                 result.push({
                                     name: 'Number',
                                     content: 3.1415926535897932384626433832795
+                                });
+                                break;
+                            case 'rad':
+                                result.push({
+                                    name: 'Symbol',
+                                    content: '*'
+                                });
+                                result.push({
+                                    name: 'Number',
+                                    content: (180 / 3.1415926535897932384626433832795)
                                 });
                                 break;
                         }
@@ -728,7 +813,7 @@ const remakeNodes = (nodes) => {
     return result;
 };
 const computeResult = (nodes, priority = 0) => {
-    if(priority > 2)
+    if(priority > 3)
     {
         return nodes;
     }
@@ -739,96 +824,61 @@ const computeResult = (nodes, priority = 0) => {
             i = 0;
         }
         let node = nodes[i];
-        if(node.name === 'Function')
+        let result;
+        switch(node.name)
         {
-            let f = preFunc[node.funcName];
-            let result = computeResult(node.content);
-            if(f.unlockLimit)
-            {
+            case 'Function':
+                let f = preFunc[node.funcName];
+                result = computeResult(node.content);
                 let prepareArgs = [];
-                for(let node of result)
+                // If either the limit's unlock and the length of result is greater or equal to the number of arguments
+                // or the result is at a correct length for the number of arguments
+                if((f.unlockLimit && (result.length >= 2 * f.nbrArg - 1)) || result.length == 2 * f.nbrArg - 1)
                 {
-                    if(node.name === 'Punctuation')
+                    for(let node of result)
                     {
-                        continue;
+                        if(node.name === 'Punctuation')
+                        {
+                            continue;
+                        }
+                        prepareArgs.push(node.content);
                     }
-                    prepareArgs.push(node.content);
+                    nodes[i].name = 'Number';
+                    nodes[i].content = f.exec(...prepareArgs);
+                    i -= 2;
                 }
-                nodes[i].name = 'Number';
-                nodes[i].content = f.exec(...prepareArgs);
+                break;
+            case 'Brackets':
+                result = computeResult(node.content);
+                nodes[i] = result[0];
                 i -= 2;
-            }
-            else if(result.length == 2 * f.nbrArg - 1) // Should be the same number of arguments
-            {
-                let prepareArgs = [];
-                for(let node of result)
-                {
-                    if(node.name === 'Punctuation')
-                    {
-                        continue;
-                    }
-                    prepareArgs.push(node.content);
-                }
-                nodes[i].name = 'Number';
-                nodes[i].content = f.exec(...prepareArgs);
-                i -= 2;
-            }
+                break;
         }
-        else if(node.name === 'Brackets')
-        {
-            let result = computeResult(node.content);
-            nodes[i] = result[0];
-            i -= 2;
-        }
-        if(i - 1 >= 0 && i + 1 < nodes.length) // Element between 2 other
+        if(i - 1 >= 0) // Previous exist
         {
             let prevNode = nodes[i - 1];
-            let nextNode = nodes[i + 1];
-            if(node.name === 'Symbol')
-            if(prioOpe[node.content] == priority)
+            if(node.name === 'Symbol' && operators[node.content] && operators[node.content].isRightApplied)
             {
-                switch(node.content)
+                // If it's the same priority as the current one AND if left operands is numbers
+                if(prevNode.name === 'Number' && operators[node.content].priority == priority)
                 {
-                    case '+':
-                        if(prevNode.name === 'Number' && nextNode.name === 'Number')
-                        {
-                            nodes[i - 1].content = prevNode.content + nextNode.content;
-                            nodes.splice(i, 2);
-                            i--;
-                        }
-                        break;
-                    case '-':
-                        if(prevNode.name === 'Number' && nextNode.name === 'Number')
-                        {
-                            nodes[i - 1].content = prevNode.content - nextNode.content;
-                            nodes.splice(i, 2);
-                            i--;
-                        }
-                        break;
-                    case '*':
-                        if(prevNode.name === 'Number' && nextNode.name === 'Number')
-                        {
-                            nodes[i - 1].content = prevNode.content * nextNode.content;
-                            nodes.splice(i, 2);
-                            i--;
-                        }
-                        break;
-                    case '/':
-                        if(prevNode.name === 'Number' && nextNode.name === 'Number')
-                        {
-                            nodes[i - 1].content = prevNode.content / nextNode.content;
-                            nodes.splice(i, 2);
-                            i--;
-                        }
-                        break;
-                    case '%':
-                        if(prevNode.name === 'Number' && nextNode.name === 'Number')
-                        {
-                            nodes[i - 1].content = prevNode.content % nextNode.content;
-                            nodes.splice(i, 2);
-                            i--;
-                        }
-                        break;
+                    nodes[i - 1].content = operators[node.content].exec(prevNode.content);
+                    nodes.splice(i, 1);
+                    i--;
+                }
+            }
+            if(i + 1 < nodes.length) // Element between 2 other
+            {
+                let nextNode = nodes[i + 1];
+                if(node.name === 'Symbol' && operators[node.content]) // If it's an existing operator
+                {
+                    // If it's the same priority as the current one AND if both operands are numbers
+                    if(operators[node.content].priority == priority && (prevNode.name === 'Number' && nextNode.name === 'Number'))
+                    {
+                        nodes[i - 1].content = operators[node.content].exec(prevNode.content, nextNode.content);
+                        nodes.splice(i, 2);
+                        i--;
+                    }
                 }
             }
         }
@@ -844,9 +894,6 @@ const computeResult = (nodes, priority = 0) => {
                         {
                             nodes[i + 1].content = -nodes[i + 1].content;
                         }
-                        nodes.splice(0, 1);
-                        i--;
-                        break;
                     case '+':
                         nodes.splice(0, 1);
                         i--;
